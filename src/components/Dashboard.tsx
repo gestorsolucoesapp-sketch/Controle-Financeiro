@@ -9,7 +9,7 @@ import {accountBalance,cardBalance,emptyData,monthEnd,today,totals,type Data} fr
 import {EntryForm,type Editing,type Table} from './EntryForm';
 const sections:{name:string;icon:LucideIcon;table?:Table}[]=[{name:'Visão geral',icon:LayoutDashboard},{name:'Lançamentos',icon:ReceiptText,table:'transactions'},{name:'Contas',icon:Landmark,table:'accounts'},{name:'Cartões',icon:CreditCard,table:'credit_cards'},{name:'Categorias',icon:Tag,table:'categories'},{name:'Orçamento',icon:Target,table:'budgets'}];
 const statusName:Record<string,string>={cleared:'Realizado',planned:'Previsto',pending:'Pendente',cancelled:'Cancelado'};
-const kindName:Record<string,string>={income:'Receita',expense:'Despesa',transfer:'Transferência',card_payment:'Pagamento de cartão',both:'Receita e despesa'};
+const kindName:Record<string,string>={income:'Receita',expense:'Despesa',transfer:'Transferência',card_payment:'Pagamento de cartão',both:'Receita e despesa',adjustment:'Crédito de cartão importado'};
 export function Dashboard({user}:{user:User}){
  const [active,setActive]=useState('Visão geral'),[month,setMonth]=useState(today().slice(0,7)),[hidden,setHidden]=useState(false),[search,setSearch]=useState('');
  const [households,setHouseholds]=useState<{id:string;name:string}[]>([]),[household,setHousehold]=useState(''),[data,setData]=useState<Data>(emptyData),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[editing,setEditing]=useState<Editing|null>(null);
