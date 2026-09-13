@@ -11,7 +11,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      {/* Extensions may add attributes to body before React loads. Keep this exception local to body. */}
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }
