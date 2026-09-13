@@ -1,7 +1,7 @@
 export type Account = {id:string;name:string;institution:string|null;type:string;opening_balance:number;active:boolean};
 export type Card = {id:string;name:string;last4:string|null;credit_limit:number;closing_day:number;due_day:number;active:boolean};
 export type Category = {id:string;name:string;kind:string;active:boolean};
-export type Transaction = {id:string;description:string;kind:string;status:string;amount:number;occurred_on:string;account_id:string|null;credit_card_id:string|null;category_id:string|null;transfer_account_id?:string|null};
+export type Transaction = {id:string;description:string;kind:string;status:string;amount:number;occurred_on:string;account_id:string|null;credit_card_id:string|null;category_id:string|null;transfer_account_id?:string|null;metadata?:{legacy_card_status?:boolean}};
 export type Budget = {id:string;category_id:string;month:string;amount:number};
 export type Data = {accounts:Account[];credit_cards:Card[];categories:Category[];transactions:Transaction[];budgets:Budget[]};
 export const emptyData:Data={accounts:[],credit_cards:[],categories:[],transactions:[],budgets:[]};
@@ -10,14 +10,18 @@ export const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Pa
 export function monthEnd(month:string){const [y,m]=month.split('-').map(Number);return `${month}-${new Date(y,m,0).getDate()}`;}
 export function cashDelta(t:Transaction,account?:string){
  const n=cents(t.amount);
- if(t.kind==='transfer')return account?(t.transfer_account_id===account?n:0)-(t.account_id===account?n:0):0;
+ if(t.kind==='transfer')return account?(t.transfer_account_id===account?n:0)-(t.account_id===account?n:0):(t.transfer_account_id?n:0)-(t.account_id?n:0);
  if(!t.account_id||(account&&t.account_id!==account))return 0;
  if(t.kind==='income')return n;
  if(t.kind==='card_payment'||(t.kind==='expense'&&!t.credit_card_id))return -n;
  return 0;
 }
 export function cardBalance(data:Data,id:string,end=today()){
- return data.transactions.filter(t=>t.credit_card_id===id&&t.status!=='cancelled'&&t.occurred_on<=end).reduce((n,t)=>n+(t.kind==='expense'?cents(t.amount):t.kind==='card_payment'?-cents(t.amount):0),0)/100;
+ return data.transactions.filter(t=>t.credit_card_id===id&&t.status!=='cancelled'&&t.occurred_on<=end).reduce((n,t)=>{
+  // Gestor stores settlement on each imported card entry, not in a linked payment ledger.
+  if(t.metadata?.legacy_card_status&&t.status==='cleared')return n;
+  return n+(t.kind==='expense'?cents(t.amount):(t.kind==='card_payment'||t.kind==='adjustment')?-cents(t.amount):0);
+ },0)/100;
 }
 export function totals(data:Data,month:string,asOf=today()){
  const end=monthEnd(month),cutoff=asOf<end?asOf:end;
